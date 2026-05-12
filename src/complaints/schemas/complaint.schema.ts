@@ -1,35 +1,92 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-@Schema({ timestamps: true }) // Adds createdAt and updatedAt automatically
+@Schema({ timestamps: true })
 export class Complaint extends Document {
+
   @Prop({ required: true })
   title: string;
 
   @Prop({ required: true })
   category: string;
 
-  @Prop({ required: true, enum: ['Normal', 'Medium', 'Urgent'], default: 'Normal' })
+  @Prop({
+    required: true,
+    enum: ['Normal', 'Medium', 'Urgent'],
+    default: 'Normal',
+  })
   urgency: string;
 
   @Prop({ required: true })
   details: string;
 
-  @Prop({ default: 'Public' })
+  @Prop({
+    default: 'Public',
+  })
   visibility: string;
 
-  @Prop({ default: 'Pending' }) // Managed by Employees: Pending, In Progress, Resolved, Rejected
+  @Prop({
+    default: 'Pending',
+  })
   status: string;
 
-  // 🔥 This links the complaint to the Citizen who created it
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  // User who created complaint
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'User',
+    required: true,
+  })
   citizenId: Types.ObjectId;
 
+  // Complaint image
   @Prop()
-  evidence?: string; // Filename for uploaded images
+  evidence?: string;
 
-  @Prop({ type: [{ from: String, text: String, date: { type: Date, default: Date.now } }] })
-  replies: { from: string; text: string; date: Date }[];
+  // Optional location
+  @Prop()
+  location?: string;
+
+  // 👍 Likes count
+  @Prop({
+    default: 0,
+  })
+  likes: number;
+
+  // 🔁 Reposts count
+  @Prop({
+    default: 0,
+  })
+  reposts: number;
+
+  // 👀 Views count
+  @Prop({
+    default: 0,
+  })
+  views: number;
+
+  // 💬 Replies / Comments
+  @Prop({
+    type: [
+      {
+        from: String,
+
+        text: String,
+
+        date: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
+    default: [],
+  })
+  replies: {
+    from: string;
+    text: string;
+    date: Date;
+  }[];
 }
 
-export const ComplaintSchema = SchemaFactory.createForClass(Complaint);
+export const ComplaintSchema =
+  SchemaFactory.createForClass(Complaint);

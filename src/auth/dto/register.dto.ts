@@ -17,6 +17,9 @@ export class RegisterDto {
   role:string
 
   @IsString()
+  constituency: string;
+
+  @IsString()
   @MinLength(6)
   password: string;
 }

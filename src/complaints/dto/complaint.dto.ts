@@ -1,6 +1,24 @@
-import { IsNotEmpty, IsString, IsEnum, IsOptional, IsMongoId } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsMongoId,
+} from 'class-validator';
+
+export enum UrgencyLevel {
+  NORMAL = 'Normal',
+  MEDIUM = 'Medium',
+  URGENT = 'Urgent',
+}
+
+export enum VisibilityType {
+  PUBLIC = 'Public',
+  PRIVATE = 'Private',
+}
 
 export class CreateComplaintDto {
+
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -9,20 +27,35 @@ export class CreateComplaintDto {
   @IsNotEmpty()
   category: string;
 
-  @IsEnum(['Normal', 'Medium', 'Urgent'], {
-    message: 'Urgency must be Normal, Medium, or Urgent',
+  @IsEnum(UrgencyLevel, {
+    message:
+      'Urgency must be Normal, Medium, or Urgent',
   })
-  urgency: string;
+  urgency: UrgencyLevel;
 
   @IsString()
   @IsNotEmpty()
   details: string;
 
+  @IsEnum(VisibilityType, {
+    message:
+      'Visibility must be Public or Private',
+  })
+  @IsOptional()
+  visibility?: VisibilityType;
+
   @IsString()
   @IsOptional()
-  visibility: string;
+  location?: string;
 
-  @IsMongoId() // Ensures the ID sent from React is a valid MongoDB ObjectId format
+  // Image filename or URL
+  @IsString()
+  @IsOptional()
+  evidence?: string;
+
+  @IsMongoId({
+    message: 'Invalid citizen ID',
+  })
   @IsNotEmpty()
   citizenId: string;
 }
