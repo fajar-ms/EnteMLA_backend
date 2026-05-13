@@ -225,6 +225,7 @@ export class ComplaintsService {
                         complaint.createdAt
                     ).getTime();
 
+<<<<<<< HEAD
                 const diffDays =
                     diffTime /
                     (1000 * 60 * 60 * 24);
@@ -269,4 +270,18 @@ export class ComplaintsService {
             { new: true },
         );
     }
+=======
+      {
+        new: true,
+      },
+    );
+  }
+  // =========================================
+  // DELETE COMPLAINT
+  // =========================================
+
+  async remove(id: string) {
+    return this.complaintModel.findByIdAndDelete(id);
+  }
+>>>>>>> 14a10f51304013d320cbf2403ca8f586f5dce59f
 }
