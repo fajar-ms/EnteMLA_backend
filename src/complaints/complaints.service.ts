@@ -17,10 +17,6 @@ export class ComplaintsService {
         private complaintModel: Model<Complaint>,
     ) { }
 
-    // =========================================
-    // CREATE COMPLAINT
-    // =========================================
-
     async create(createComplaintDto: CreateComplaintDto): Promise<Complaint> {
         const newComplaint = new this.complaintModel({
             ...createComplaintDto,
@@ -51,10 +47,6 @@ export class ComplaintsService {
         return newComment;
     }
 
-    // =========================================
-    // GET CITIZEN COMPLAINTS
-    // =========================================
-
     async findByCitizen(citizenId: string) {
         return this.complaintModel
             .find({ citizenId })
@@ -62,22 +54,12 @@ export class ComplaintsService {
             .exec();
     }
 
-    // =========================================
-    // GET ALL COMPLAINTS
-    // EMPLOYEE DASHBOARD
-    // =========================================
-
     async findAll() {
         return this.complaintModel
             .find()
             .populate('citizenId', 'name email') // 🔥 THIS FIXES NAME ISSUE
             .exec();
     }
-
-    // =========================================
-    // GET PUBLIC COMPLAINTS
-    // PUBLIC FEED
-    // =========================================
 
     async getPublicComplaints(): Promise<Complaint[]> {
 
@@ -99,10 +81,6 @@ export class ComplaintsService {
             .exec();
     }
 
-    // =========================================
-    // LIKE COMPLAINT
-    // =========================================
-
     async likeComplaint(
         id: string,
     ): Promise<Complaint | null> {
@@ -123,10 +101,6 @@ export class ComplaintsService {
         );
     }
 
-    // =========================================
-    // REPOST COMPLAINT
-    // =========================================
-
     async repostComplaint(
         id: string,
     ): Promise<Complaint | null> {
@@ -146,10 +120,6 @@ export class ComplaintsService {
             },
         );
     }
-
-    // =========================================
-    // ADD REPLY / COMMENT
-    // =========================================
 
     async addReply(
 
@@ -225,7 +195,6 @@ export class ComplaintsService {
                         complaint.createdAt
                     ).getTime();
 
-<<<<<<< HEAD
                 const diffDays =
                     diffTime /
                     (1000 * 60 * 60 * 24);
@@ -253,35 +222,39 @@ export class ComplaintsService {
             avgResponse,
         };
     }
-
-
-
-    // =========================================
-    // UPDATE STATUS
-    // =========================================
-
     async updateStatus(
-        id: string,
-        status: string,
+      id: string,
+      status: string,
+      comment?: string,
     ): Promise<Complaint | null> {
-        return this.complaintModel.findByIdAndUpdate(
-            id,
-            { status },
-            { new: true },
-        );
-    }
-=======
-      {
-        new: true,
-      },
-    );
-  }
-  // =========================================
-  // DELETE COMPLAINT
-  // =========================================
 
+      return this.complaintModel.findByIdAndUpdate(
+        id,
+        {
+          status,
+          comment,
+        },
+        { new: true },
+      );
+    }
   async remove(id: string) {
     return this.complaintModel.findByIdAndDelete(id);
   }
->>>>>>> 14a10f51304013d320cbf2403ca8f586f5dce59f
+  async sendMessage(id: string, comment: string, userId: string) {
+  const updatedComplaint = await this.complaintModel.findByIdAndUpdate(
+    id,
+    {
+      $push: {
+        replies: {
+          from: userId,
+          text: comment,
+          date: new Date(),
+        },
+      },
+    },
+    { new: true }
+  );
+
+  return updatedComplaint;
+}
 }

@@ -51,16 +51,30 @@ export class ComplaintsController {
     return await this.complaintsService.getComplaintStats();
   }
 
-  @Patch(':id/status')
-  async updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.complaintsService.updateStatus(id, status);
+ @Patch(':id/status')
+  updateStatus(
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    return this.complaintsService.updateStatus(
+      id,
+      body.status,
+      body.comment,
+    );
   }
 
   @Post(':id/comment')
   async addComment(@Param('id') id: string, @Body() body: CreateCommentDto) {
     return this.complaintsService.addComment(id, body);
   }
-
+  @Post(':id/message')
+sendMessage(
+  @Param('id') id: string,
+  @Body('comment') comment: string,
+  @Body('userId') userId: string,
+) {
+  return this.complaintsService.sendMessage(id, comment, userId);
+}
   @Patch(':id/reply')
   async addReply(
     @Param('id') id: string,

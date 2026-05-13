@@ -28,7 +28,6 @@ export class Complaint {
   @Prop({ default: 'Pending' })
   status: string;
 
-  // ✅ FIXED: Proper Mongo reference
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   citizenId: Types.ObjectId;
 
@@ -46,6 +45,9 @@ export class Complaint {
 
   @Prop({ default: 0 })
   views: number;
+
+  @Prop({ default: "" })
+  comment: string;
 
   @Prop({
     type: [
