@@ -13,7 +13,7 @@ export class AuthService implements OnModuleInit {
         await this.seedMLA();
     }
     async seedMLA() {
-    const mlaEmail = "mla.official@government.in"; // Your fixed MLA email
+    const mlaEmail = "mla@gmail.com"; // Your fixed MLA email
     const existingMLA = await this.userModel.findOne({ email: mlaEmail });
 
     if (!existingMLA) {

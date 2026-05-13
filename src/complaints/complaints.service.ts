@@ -211,4 +211,11 @@ export class ComplaintsService {
       },
     );
   }
+  // =========================================
+  // DELETE COMPLAINT
+  // =========================================
+
+  async remove(id: string) {
+    return this.complaintModel.findByIdAndDelete(id);
+  }
 }

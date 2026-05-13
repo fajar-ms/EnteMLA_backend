@@ -5,6 +5,7 @@ import {
   Body,
   Param,
   Patch,
+  Delete,
 } from '@nestjs/common';
 
 import { ComplaintsService } from './complaints.service';
@@ -94,5 +95,9 @@ export class ComplaintsController {
       text,
       from,
     );
+  }
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.complaintsService.remove(id);
   }
 }
