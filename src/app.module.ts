@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { Complaint } from './complaints/schemas/complaint.schema';
 import { ComplaintsModule } from './complaints/complaint.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ComplaintsModule } from './complaints/complaint.module';
     // 3. Include your Auth logic
     AuthModule,
     ComplaintsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

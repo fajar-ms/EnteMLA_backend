@@ -7,208 +7,266 @@ import { Complaint } from './schemas/complaint.schema';
 
 import { CreateComplaintDto } from './dto/complaint.dto';
 
+import { CreateCommentDto } from './dto/create-comment.dto';
+
 @Injectable()
 export class ComplaintsService {
 
-  constructor(
-    @InjectModel(Complaint.name)
-    private complaintModel: Model<Complaint>,
-  ) {}
+    constructor(
+        @InjectModel(Complaint.name)
+        private complaintModel: Model<Complaint>,
+    ) { }
 
-  // =========================================
-  // CREATE COMPLAINT
-  // =========================================
+    // =========================================
+    // CREATE COMPLAINT
+    // =========================================
 
-  async create(
-    createComplaintDto: CreateComplaintDto,
-  ): Promise<Complaint> {
+    async create(createComplaintDto: CreateComplaintDto): Promise<Complaint> {
+        const newComplaint = new this.complaintModel({
+            ...createComplaintDto,
+            citizenId: createComplaintDto.citizenId, // ✅ keep as string
+        });
 
-    const newComplaint =
-      new this.complaintModel(
-        createComplaintDto,
-      );
+        return await newComplaint.save();
+    }
 
-    return await newComplaint.save();
-  }
+    async addComment(id: string, body: CreateCommentDto) {
 
-  // =========================================
-  // GET CITIZEN COMPLAINTS
-  // =========================================
+        const complaint = await this.complaintModel.findById(id);
 
-  async findByCitizen(
-    citizenId: string,
-  ): Promise<Complaint[]> {
+        if (!complaint) {
+            throw new Error('Complaint not found');
+        }
 
-    return await this.complaintModel
+        const newComment = {
+            userId: new Types.ObjectId(body.userId),
+            text: body.text,
+            date: new Date(),
+        };
 
-      .find({
-        citizenId:
-          new Types.ObjectId(citizenId),
-      })
+        complaint.replies.push(newComment);
 
-      .sort({
-        createdAt: -1,
-      })
+        await complaint.save();
 
-      .exec();
-  }
+        return newComment;
+    }
 
-  // =========================================
-  // GET ALL COMPLAINTS
-  // EMPLOYEE DASHBOARD
-  // =========================================
+    // =========================================
+    // GET CITIZEN COMPLAINTS
+    // =========================================
 
-  async findAll(): Promise<Complaint[]> {
+    async findByCitizen(citizenId: string) {
+        return this.complaintModel
+            .find({ citizenId })
+            .populate('citizenId', 'name email')
+            .exec();
+    }
 
-    return await this.complaintModel
+    // =========================================
+    // GET ALL COMPLAINTS
+    // EMPLOYEE DASHBOARD
+    // =========================================
 
-      .find()
+    async findAll() {
+        return this.complaintModel
+            .find()
+            .populate('citizenId', 'name email') // 🔥 THIS FIXES NAME ISSUE
+            .exec();
+    }
 
-      .populate(
-        'citizenId',
-        'name',
-      )
+    // =========================================
+    // GET PUBLIC COMPLAINTS
+    // PUBLIC FEED
+    // =========================================
 
-      .sort({
-        createdAt: -1,
-      })
+    async getPublicComplaints(): Promise<Complaint[]> {
 
-      .exec();
-  }
+        return await this.complaintModel
 
-  // =========================================
-  // GET PUBLIC COMPLAINTS
-  // PUBLIC FEED
-  // =========================================
+            .find({
+                visibility: 'Public',
+            })
 
-  async getPublicComplaints(): Promise<Complaint[]> {
+            .populate(
+                'citizenId',
+                'name',
+            )
 
-    return await this.complaintModel
+            .sort({
+                createdAt: -1,
+            })
 
-      .find({
-        visibility: 'Public',
-      })
+            .exec();
+    }
 
-      .populate(
-        'citizenId',
-        'name',
-      )
+    // =========================================
+    // LIKE COMPLAINT
+    // =========================================
 
-      .sort({
-        createdAt: -1,
-      })
+    async likeComplaint(
+        id: string,
+    ): Promise<Complaint | null> {
 
-      .exec();
-  }
+        return await this.complaintModel.findByIdAndUpdate(
 
-  // =========================================
-  // LIKE COMPLAINT
-  // =========================================
+            id,
 
-  async likeComplaint(
-    id: string,
-  ): Promise<Complaint | null> {
+            {
+                $inc: {
+                    likes: 1,
+                },
+            },
 
-    return await this.complaintModel.findByIdAndUpdate(
+            {
+                new: true,
+            },
+        );
+    }
 
-      id,
+    // =========================================
+    // REPOST COMPLAINT
+    // =========================================
 
-      {
-        $inc: {
-          likes: 1,
-        },
-      },
+    async repostComplaint(
+        id: string,
+    ): Promise<Complaint | null> {
 
-      {
-        new: true,
-      },
-    );
-  }
+        return await this.complaintModel.findByIdAndUpdate(
 
-  // =========================================
-  // REPOST COMPLAINT
-  // =========================================
+            id,
 
-  async repostComplaint(
-    id: string,
-  ): Promise<Complaint | null> {
+            {
+                $inc: {
+                    reposts: 1,
+                },
+            },
 
-    return await this.complaintModel.findByIdAndUpdate(
+            {
+                new: true,
+            },
+        );
+    }
 
-      id,
+    // =========================================
+    // ADD REPLY / COMMENT
+    // =========================================
 
-      {
-        $inc: {
-          reposts: 1,
-        },
-      },
+    async addReply(
 
-      {
-        new: true,
-      },
-    );
-  }
+        id: string,
 
-  // =========================================
-  // ADD REPLY / COMMENT
-  // =========================================
+        replyText: string,
 
-  async addReply(
+        fromRole: string,
+    ): Promise<Complaint | null> {
 
-    id: string,
+        const newReply = {
 
-    replyText: string,
+            from: fromRole,
 
-    fromRole: string,
-  ): Promise<Complaint | null> {
+            text: replyText,
 
-    const newReply = {
+            date: new Date(),
+        };
 
-      from: fromRole,
+        return await this.complaintModel.findByIdAndUpdate(
 
-      text: replyText,
+            id,
 
-      date: new Date(),
-    };
+            {
+                $push: {
+                    replies: newReply,
+                },
+            },
 
-    return await this.complaintModel.findByIdAndUpdate(
+            {
+                new: true,
+            },
+        );
+    }
 
-      id,
+    async getComplaintStats() {
 
-      {
-        $push: {
-          replies: newReply,
-        },
-      },
+        // Total complaints
+        const totalComplaints =
+            await this.complaintModel.countDocuments();
 
-      {
-        new: true,
-      },
-    );
-  }
+        // Resolved complaints
+        const resolvedComplaints =
+            await this.complaintModel.countDocuments({
+                status: 'Resolved',
+            });
 
-  // =========================================
-  // UPDATE STATUS
-  // =========================================
+        // In Progress complaints
+        const inProgressComplaints =
+            await this.complaintModel.countDocuments({
+                status: 'In Progress',
+            });
 
-  async updateStatus(
+        // Average response time
+        const complaints =
+            await this.complaintModel.find();
 
-    id: string,
+        let totalDays = 0;
 
-    status: string,
-  ): Promise<Complaint | null> {
+        complaints.forEach((complaint: any) => {
 
-    return await this.complaintModel.findByIdAndUpdate(
+            if (
+                complaint.createdAt &&
+                complaint.updatedAt
+            ) {
 
-      id,
+                const diffTime =
+                    new Date(
+                        complaint.updatedAt
+                    ).getTime() -
 
-      {
-        status,
-      },
+                    new Date(
+                        complaint.createdAt
+                    ).getTime();
 
-      {
-        new: true,
-      },
-    );
-  }
+                const diffDays =
+                    diffTime /
+                    (1000 * 60 * 60 * 24);
+
+                totalDays += diffDays;
+            }
+        });
+
+        const avgResponse =
+            complaints.length > 0
+                ? (
+                    totalDays /
+                    complaints.length
+                ).toFixed(1)
+                : 0;
+
+        return {
+
+            totalComplaints,
+
+            resolvedComplaints,
+
+            inProgressComplaints,
+
+            avgResponse,
+        };
+    }
+
+
+
+    // =========================================
+    // UPDATE STATUS
+    // =========================================
+
+    async updateStatus(
+        id: string,
+        status: string,
+    ): Promise<Complaint | null> {
+        return this.complaintModel.findByIdAndUpdate(
+            id,
+            { status },
+            { new: true },
+        );
+    }
 }

@@ -1,8 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
+
+export type ComplaintDocument = HydratedDocument<Complaint>;
 
 @Schema({ timestamps: true })
-export class Complaint extends Document {
+export class Complaint {
 
   @Prop({ required: true })
   title: string;
@@ -20,57 +22,44 @@ export class Complaint extends Document {
   @Prop({ required: true })
   details: string;
 
-  @Prop({
-    default: 'Public',
-  })
+  @Prop({ default: 'Public' })
   visibility: string;
 
-  @Prop({
-    default: 'Pending',
-  })
+  @Prop({ default: 'Pending' })
   status: string;
 
-  // User who created complaint
-  @Prop({
-    type: Types.ObjectId,
-    ref: 'User',
-    required: true,
-  })
+  // ✅ FIXED: Proper Mongo reference
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   citizenId: Types.ObjectId;
 
-  // Complaint image
   @Prop()
   evidence?: string;
 
-  // Optional location
   @Prop()
   location?: string;
 
-  // 👍 Likes count
-  @Prop({
-    default: 0,
-  })
+  @Prop({ default: 0 })
   likes: number;
 
-  // 🔁 Reposts count
-  @Prop({
-    default: 0,
-  })
+  @Prop({ default: 0 })
   reposts: number;
 
-  // 👀 Views count
-  @Prop({
-    default: 0,
-  })
+  @Prop({ default: 0 })
   views: number;
 
-  // 💬 Replies / Comments
   @Prop({
     type: [
       {
-        from: String,
+        userId: {
+          type: Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
 
-        text: String,
+        text: {
+          type: String,
+          required: true,
+        },
 
         date: {
           type: Date,
@@ -78,15 +67,13 @@ export class Complaint extends Document {
         },
       },
     ],
-
     default: [],
   })
   replies: {
-    from: string;
+    userId: Types.ObjectId;
     text: string;
     date: Date;
   }[];
 }
 
-export const ComplaintSchema =
-  SchemaFactory.createForClass(Complaint);
+export const ComplaintSchema = SchemaFactory.createForClass(Complaint);
