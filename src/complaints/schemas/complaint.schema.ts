@@ -7,29 +7,29 @@ export type ComplaintDocument = HydratedDocument<Complaint>;
 export class Complaint {
 
   @Prop({ required: true })
-  title: string;
+  title !: string;
 
   @Prop({ required: true })
-  category: string;
+  category !: string;
 
   @Prop({
     required: true,
     enum: ['Normal', 'Medium', 'Urgent'],
     default: 'Normal',
   })
-  urgency: string;
+  urgency !: string;
 
   @Prop({ required: true })
-  details: string;
+  details !: string;
 
   @Prop({ default: 'Public' })
-  visibility: string;
+  visibility!: string;
 
   @Prop({ default: 'Pending' })
-  status: string;
+  status!: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  citizenId: Types.ObjectId;
+  citizenId!: Types.ObjectId;
 
   @Prop()
   evidence?: string;
@@ -38,16 +38,16 @@ export class Complaint {
   location?: string;
 
   @Prop({ default: 0 })
-  likes: number;
+  likes !: number;
 
   @Prop({ default: 0 })
-  reposts: number;
+  reposts!: number;
 
   @Prop({ default: 0 })
-  views: number;
+  views!: number;
 
   @Prop({ default: "" })
-  comment: string;
+  comment!: string;
 
   @Prop({
     type: [
@@ -55,26 +55,45 @@ export class Complaint {
         userId: {
           type: Types.ObjectId,
           ref: 'User',
-          required: true,
+          
         },
 
         text: {
           type: String,
           required: true,
         },
-
-        date: {
-          type: Date,
-          default: Date.now,
-        },
+        username: {
+        type: String,
+        
+      },
+        from: {
+        type: String,
+        default: 'Citizen',
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+role: {
+        type: String,
+        default: 'citizen',
+      },
+        
+        
       },
     ],
+
     default: [],
   })
-  replies: {
-    userId: Types.ObjectId;
-    text: string;
-    date: Date;
+  replies !: {
+    userId?: Types.ObjectId;
+  username?: string;
+  text: string;
+  role?: string;
+  
+  from?: string;
+    createdAt?: Date;
+
   }[];
 }
 

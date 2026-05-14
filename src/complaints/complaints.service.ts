@@ -1,260 +1,161 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-
 import { Model, Types } from 'mongoose';
-
 import { Complaint } from './schemas/complaint.schema';
-
 import { CreateComplaintDto } from './dto/complaint.dto';
-
 import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
 export class ComplaintsService {
 
-    constructor(
-        @InjectModel(Complaint.name)
-        private complaintModel: Model<Complaint>,
-    ) { }
+  constructor(
+    @InjectModel(Complaint.name)
+    private complaintModel: Model<Complaint>,
+  ) {}
 
-    async create(createComplaintDto: CreateComplaintDto): Promise<Complaint> {
-        const newComplaint = new this.complaintModel({
-            ...createComplaintDto,
-            citizenId: createComplaintDto.citizenId, // ✅ keep as string
-        });
+  async create(createComplaintDto: CreateComplaintDto): Promise<Complaint> {
+    const newComplaint = new this.complaintModel({
+      ...createComplaintDto,
+      citizenId: createComplaintDto.citizenId,
+    });
+    return await newComplaint.save();
+  }
 
-        return await newComplaint.save();
+  async addComment(id: string, body: CreateCommentDto) {
+    const complaint = await this.complaintModel.findById(id);
+    if (!complaint) {
+      throw new Error('Complaint not found');
     }
+    const newComment = {
+      userId: new Types.ObjectId(body.userId),
+      username: body.username,
+      role: body.role,
+      text: body.text,
+      date: new Date(),
+    };
+    complaint.replies.push(newComment);
+    await complaint.save();
+    return newComment;
+  }
 
-    async addComment(id: string, body: CreateCommentDto) {
+  async findByCitizen(citizenId: string) {
+    return this.complaintModel
+      .find({ citizenId })
+      .populate('citizenId', 'name email')
+      .exec();
+  }
 
-        const complaint = await this.complaintModel.findById(id);
+  async findAll() {
+    return this.complaintModel
+      .find()
+      .populate('citizenId', 'name email')
+      .exec();
+  }
 
-        if (!complaint) {
-            throw new Error('Complaint not found');
-        }
+  async getPublicComplaints(): Promise<Complaint[]> {
+    return await this.complaintModel
+      .find({ visibility: 'Public' })
+      .populate('citizenId', 'name')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
 
-        const newComment = {
-            userId: new Types.ObjectId(body.userId),
-            text: body.text,
-            date: new Date(),
-        };
+  async likeComplaint(id: string): Promise<Complaint | null> {
+    return await this.complaintModel.findByIdAndUpdate(
+      id,
+      { $inc: { likes: 1 } },
+      { new: true },
+    );
+  }
 
-        complaint.replies.push(newComment);
+  async repostComplaint(id: string): Promise<Complaint | null> {
+    return await this.complaintModel.findByIdAndUpdate(
+      id,
+      { $inc: { reposts: 1 } },
+      { new: true },
+    );
+  }
 
-        await complaint.save();
+  async addReply(
+    id: string,
+    replyText: string,
+    fromRole: string,
+    username: string,
+  ) {
+    const fromLabel =
+      fromRole === 'employee' ? 'Employee' :
+      fromRole === 'mla' ? 'MLA' :
+      'Citizen';
 
-        return newComment;
-    }
+    const newReply = {
+      text: replyText,
+      username,
+      from: fromLabel,
+      role: fromRole,       // ✅ saves "employee" / "mla" / "citizen"
+      createdAt: new Date(),
+    };
 
-    async findByCitizen(citizenId: string) {
-        return this.complaintModel
-            .find({ citizenId })
-            .populate('citizenId', 'name email')
-            .exec();
-    }
+    return this.complaintModel.findByIdAndUpdate(
+      id,
+      { $push: { replies: newReply } },
+      { new: true },
+    );
+  }
 
-    async findAll() {
-        return this.complaintModel
-            .find()
-            .populate('citizenId', 'name email') // 🔥 THIS FIXES NAME ISSUE
-            .exec();
-    }
+  async getComplaintStats() {
+    const totalComplaints = await this.complaintModel.countDocuments();
+    const resolvedComplaints = await this.complaintModel.countDocuments({ status: 'Resolved' });
+    const inProgressComplaints = await this.complaintModel.countDocuments({ status: 'In Progress' });
 
-    async getPublicComplaints(): Promise<Complaint[]> {
+    const complaints = await this.complaintModel.find();
+    let totalDays = 0;
 
-        return await this.complaintModel
+    complaints.forEach((complaint: any) => {
+      if (complaint.createdAt && complaint.updatedAt) {
+        const diffTime = new Date(complaint.updatedAt).getTime() - new Date(complaint.createdAt).getTime();
+        totalDays += diffTime / (1000 * 60 * 60 * 24);
+      }
+    });
 
-            .find({
-                visibility: 'Public',
-            })
+    const avgResponse = complaints.length > 0
+      ? (totalDays / complaints.length).toFixed(1)
+      : 0;
 
-            .populate(
-                'citizenId',
-                'name',
-            )
+    return { totalComplaints, resolvedComplaints, inProgressComplaints, avgResponse };
+  }
 
-            .sort({
-                createdAt: -1,
-            })
+  async updateStatus(id: string, status: string, comment?: string): Promise<Complaint | null> {
+    return this.complaintModel.findByIdAndUpdate(
+      id,
+      { status, comment },
+      { new: true },
+    );
+  }
 
-            .exec();
-    }
-
-    async likeComplaint(
-        id: string,
-    ): Promise<Complaint | null> {
-
-        return await this.complaintModel.findByIdAndUpdate(
-
-            id,
-
-            {
-                $inc: {
-                    likes: 1,
-                },
-            },
-
-            {
-                new: true,
-            },
-        );
-    }
-
-    async repostComplaint(
-        id: string,
-    ): Promise<Complaint | null> {
-
-        return await this.complaintModel.findByIdAndUpdate(
-
-            id,
-
-            {
-                $inc: {
-                    reposts: 1,
-                },
-            },
-
-            {
-                new: true,
-            },
-        );
-    }
-
-    async addReply(
-
-        id: string,
-
-        replyText: string,
-
-        fromRole: string,
-    ): Promise<Complaint | null> {
-
-        const newReply = {
-
-            from: fromRole,
-
-            text: replyText,
-
-            date: new Date(),
-        };
-
-        return await this.complaintModel.findByIdAndUpdate(
-
-            id,
-
-            {
-                $push: {
-                    replies: newReply,
-                },
-            },
-
-            {
-                new: true,
-            },
-        );
-    }
-
-    async getComplaintStats() {
-
-        // Total complaints
-        const totalComplaints =
-            await this.complaintModel.countDocuments();
-
-        // Resolved complaints
-        const resolvedComplaints =
-            await this.complaintModel.countDocuments({
-                status: 'Resolved',
-            });
-
-        // In Progress complaints
-        const inProgressComplaints =
-            await this.complaintModel.countDocuments({
-                status: 'In Progress',
-            });
-
-        // Average response time
-        const complaints =
-            await this.complaintModel.find();
-
-        let totalDays = 0;
-
-        complaints.forEach((complaint: any) => {
-
-            if (
-                complaint.createdAt &&
-                complaint.updatedAt
-            ) {
-
-                const diffTime =
-                    new Date(
-                        complaint.updatedAt
-                    ).getTime() -
-
-                    new Date(
-                        complaint.createdAt
-                    ).getTime();
-
-                const diffDays =
-                    diffTime /
-                    (1000 * 60 * 60 * 24);
-
-                totalDays += diffDays;
-            }
-        });
-
-        const avgResponse =
-            complaints.length > 0
-                ? (
-                    totalDays /
-                    complaints.length
-                ).toFixed(1)
-                : 0;
-
-        return {
-
-            totalComplaints,
-
-            resolvedComplaints,
-
-            inProgressComplaints,
-
-            avgResponse,
-        };
-    }
-    async updateStatus(
-      id: string,
-      status: string,
-      comment?: string,
-    ): Promise<Complaint | null> {
-
-      return this.complaintModel.findByIdAndUpdate(
-        id,
-        {
-          status,
-          comment,
-        },
-        { new: true },
-      );
-    }
   async remove(id: string) {
     return this.complaintModel.findByIdAndDelete(id);
   }
-  async sendMessage(id: string, comment: string, userId: string) {
-  const updatedComplaint = await this.complaintModel.findByIdAndUpdate(
-    id,
-    {
-      $push: {
-        replies: {
-          from: userId,
-          text: comment,
-          date: new Date(),
+
+  async sendMessage(id: string, comment: string, username: string, role: string) {
+    const fromLabel =
+      role === 'employee' ? 'Employee' :
+      role === 'mla' ? 'MLA' :
+      'Citizen';
+
+    return this.complaintModel.findByIdAndUpdate(
+      id,
+      {
+        $push: {
+          replies: {
+            text: comment,
+            username,
+            from: fromLabel,
+            role: role,        // ✅ saves role correctly
+            createdAt: new Date(),
+          },
         },
       },
-    },
-    { new: true }
-  );
-
-  return updatedComplaint;
+      { new: true },
+    );
   }
 }

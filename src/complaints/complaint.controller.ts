@@ -67,22 +67,16 @@ export class ComplaintsController {
   async addComment(@Param('id') id: string, @Body() body: CreateCommentDto) {
     return this.complaintsService.addComment(id, body);
   }
-  @Post(':id/message')
-sendMessage(
+  
+ @Patch(':id/reply')
+async addReply(
   @Param('id') id: string,
-  @Body('comment') comment: string,
-  @Body('userId') userId: string,
+  @Body('text') text: string,
+  @Body('role') role: string,
+  @Body('username') username: string,
 ) {
-  return this.complaintsService.sendMessage(id, comment, userId);
+  return this.complaintsService.addReply(id, text, role, username);
 }
-  @Patch(':id/reply')
-  async addReply(
-    @Param('id') id: string,
-    @Body('text') text: string,
-    @Body('from') from: string,
-  ) {
-    return await this.complaintsService.addReply(id, text, from);
-  }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
