@@ -35,16 +35,24 @@ export class ComplaintsController {
   async getPublicComplaints() {
     return await this.complaintsService.getPublicComplaints();
   }
+// Replace ONLY these two methods in complaints.controller.ts
 
-  @Patch(':id/like')
-  async likeComplaint(@Param('id') id: string) {
-    return await this.complaintsService.likeComplaint(id);
-  }
+@Patch(':id/like')
+async likeComplaint(
+  @Param('id') id: string,
+  @Body('userId') userId: string,
+) {
+  return this.complaintsService.likeComplaint(id, userId);
+}
 
-  @Patch(':id/repost')
-  async repostComplaint(@Param('id') id: string) {
-    return await this.complaintsService.repostComplaint(id);
-  }
+@Patch(':id/repost')
+async repostComplaint(
+  @Param('id') id: string,
+  @Body('userId') userId: string,
+) {
+  return this.complaintsService.repostComplaint(id, userId);
+}
+  
 
   @Get('stats')
   async getStats() {

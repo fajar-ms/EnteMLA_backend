@@ -40,8 +40,24 @@ export class Complaint {
   @Prop({ default: 0 })
   likes !: number;
 
+  // Users who liked this complaint
+  @Prop({
+    type: [Types.ObjectId],
+    ref: 'User',
+    default: [],
+  })
+  likedBy!: Types.ObjectId[];
+
+  // Total repost count
   @Prop({ default: 0 })
   reposts!: number;
+
+  @Prop({
+  type: [Types.ObjectId],
+  ref: 'User',
+  default: [],
+})
+repostedBy!: Types.ObjectId[];
 
   @Prop({ default: 0 })
   views!: number;

@@ -59,23 +59,92 @@ export class ComplaintsService {
       .sort({ createdAt: -1 })
       .exec();
   }
+// Replace your existing likeComplaint() and repostComplaint()
+// methods in complaints.service.ts with the following:
 
-  async likeComplaint(id: string): Promise<Complaint | null> {
-    return await this.complaintModel.findByIdAndUpdate(
-      id,
-      { $inc: { likes: 1 } },
-      { new: true },
-    );
+async likeComplaint(id: string, userId: string) {
+  const complaint = await this.complaintModel.findById(id);
+
+  if (!complaint) {
+    throw new Error('Complaint not found');
   }
 
-  async repostComplaint(id: string): Promise<Complaint | null> {
-    return await this.complaintModel.findByIdAndUpdate(
-      id,
-      { $inc: { reposts: 1 } },
-      { new: true },
-    );
+  // Initialize likedBy if undefined
+  if (!complaint.likedBy) {
+    complaint.likedBy = [];
   }
 
+  // Check whether this user already liked
+  const alreadyLiked = complaint.likedBy.some(
+    (likedUserId) => likedUserId.toString() === userId.toString(),
+  );
+
+  if (alreadyLiked) {
+    return {
+      success: false,
+      message: 'You already liked this complaint',
+      likes: complaint.likedBy.length,
+      likedBy: complaint.likedBy,
+    };
+  }
+
+  // Add user to likedBy
+  complaint.likedBy.push(new Types.ObjectId(userId));
+
+  // Update likes count
+  complaint.likes = complaint.likedBy.length;
+
+  const updatedComplaint = await complaint.save();
+
+  return {
+    success: true,
+    message: 'Complaint liked successfully',
+    likes: updatedComplaint.likes,
+    likedBy: updatedComplaint.likedBy,
+  };
+}
+
+async repostComplaint(id: string, userId: string) {
+  const complaint = await this.complaintModel.findById(id);
+
+  if (!complaint) {
+    throw new Error('Complaint not found');
+  }
+
+  // Initialize repostedBy if undefined
+  if (!complaint.repostedBy) {
+    complaint.repostedBy = [];
+  }
+
+  // Check whether this user already reposted
+  const alreadyReposted = complaint.repostedBy.some(
+    (repostUserId) => repostUserId.toString() === userId.toString(),
+  );
+
+  if (alreadyReposted) {
+    return {
+      success: false,
+      message: 'You already reposted this complaint',
+      reposts: complaint.repostedBy.length,
+      repostedBy: complaint.repostedBy,
+    };
+  }
+
+  // Add user to repostedBy
+  complaint.repostedBy.push(new Types.ObjectId(userId));
+
+  // Update repost count
+  complaint.reposts = complaint.repostedBy.length;
+
+  const updatedComplaint = await complaint.save();
+
+  return {
+    success: true,
+    message: 'Complaint reposted successfully',
+    reposts: updatedComplaint.reposts,
+    repostedBy: updatedComplaint.repostedBy,
+  };
+}
   async addReply(
     id: string,
     replyText: string,
