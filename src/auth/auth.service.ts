@@ -3,7 +3,6 @@ import { InjectModel } from "@nestjs/mongoose";
 import { User } from "./schemas/user.schema";
 import { Model } from "mongoose";
 import { RegisterDto } from "./dto/register.dto";
-import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -12,59 +11,74 @@ export class AuthService implements OnModuleInit {
     async onModuleInit() {
         await this.seedMLA();
     }
+
     async seedMLA() {
-    const mlaEmail = "mla@gmail.com"; // Your fixed MLA email
-    const existingMLA = await this.userModel.findOne({ email: mlaEmail });
+        const mlaEmail = "mla.official@government.in"; // Using your consistent official email
 
-    if (!existingMLA) {
-      console.log('🚀 Seeding MLA details into database...');
-      const mlaData = {
-        name: "Hon. MLA Name",
-        email: "mla@gmail.com",
-        password: "qwerty123456", // In production, use bcrypt to hash this!
-        phone: "9876543210",
-        district: "Ernakulam",
-        constituency: "Greenfield Constituency",
-        place: "Kochi",
-        role: "mla"
-      };
+        try {
+            const existingMLA = await this.userModel.findOne({ email: mlaEmail });
 
-      const mla = new this.userModel(mlaData);
-      await mla.save();
-      console.log('✅ MLA details successfully hardcoded.');
-    }
-  }
-    async register(dto: RegisterDto) {
-        const existing = await this.userModel.findOne({ email: dto.email })
-        if (existing) {
-            throw new BadRequestException('Email already Exist')
-        } else {
-            const newUser = new this.userModel(dto)
-            return newUser.save()
+            if (!existingMLA) {
+                console.log('🚀 Seeding MLA details into database...');
+
+                const mlaData = {
+                    name: "Hon. MLA Name",
+                    email: mlaEmail,
+                    password: "qwerty123456", // ⚠️ In production, use bcrypt to hash this!
+                    phone: "9876543210",
+                    district: "Ernakulam",
+                    constituency: "Greenfield Constituency",
+                    place: "Kochi", 
+                    role: "mla"
+                };
+
+                const mla = new this.userModel(mlaData);
+                await mla.save();
+                console.log('✅ MLA seeded successfully!');
+            } else {
+                console.log('✅ MLA already exists in database.');
+            }
+        } catch (error: any) {
+            if (error.code === 11000) {
+                console.log('✅ MLA already exists (duplicate key handled).');
+            } else {
+                console.error('❌ Error seeding MLA:', error.message);
+            }
         }
     }
+
+    async register(dto: RegisterDto) {
+        const existing = await this.userModel.findOne({ email: dto.email });
+        if (existing) {
+            throw new BadRequestException('Email already exists');
+        }
+        const newUser = new this.userModel(dto);
+        return newUser.save();
+    }
+
     async login(loginDto: any) {
-        const { email, password, role } = loginDto
-        const user = await this.userModel.findOne({ email: loginDto.email })
+        const user = await this.userModel.findOne({ email: loginDto.email });
 
         if (!user || user.password !== loginDto.password) {
-            throw new UnauthorizedException('Invalid email or password')
+            throw new UnauthorizedException('Invalid email or password');
         }
-        if (user.role !== role) {
-            throw new UnauthorizedException(`Access Denied: You are not registered as an ${role}`);
+
+        if (user.role !== loginDto.role) {
+            throw new UnauthorizedException(`Access Denied: You are not registered as ${loginDto.role}`);
         }
+
         return {
             message: 'Login successful',
             user: {
-                _id:user._id,
+                _id: user._id,
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
                 district: user.district,
                 constituency: user.constituency,
-                place: user.place, // Make sure this matches your schema
+                place: user.place,
                 role: user.role
             }
-        }
+        };
     }
 }
