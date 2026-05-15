@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ComplaintsModule } from './complaints/complaint.module';
 import { UsersModule } from './users/users.module';
-import { RagModule } from './rag/rag.module'; // 1. Added RagModule import
+// import { RagModule } from './rag/rag.module'; // 1. Added RagModule import
 
 
 @Module({
@@ -26,7 +26,6 @@ import { RagModule } from './rag/rag.module'; // 1. Added RagModule import
 
     AuthModule,
     ComplaintsModule,
-    RagModule,
     UsersModule,
   ],
   controllers: [AppController],
