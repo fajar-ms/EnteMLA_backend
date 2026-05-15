@@ -23,7 +23,9 @@ export class AuthService implements OnModuleInit {
         email: "mla@gmail.com",
         password: "qwerty123456", // In production, use bcrypt to hash this!
         phone: "9876543210",
-        place: "Greenfield Constituency",
+        district: "Ernakulam",
+        constituency: "Greenfield Constituency",
+        place: "Kochi",
         role: "mla"
       };
 
@@ -58,6 +60,8 @@ export class AuthService implements OnModuleInit {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
+                district: user.district,
+                constituency: user.constituency,
                 place: user.place, // Make sure this matches your schema
                 role: user.role
             }
