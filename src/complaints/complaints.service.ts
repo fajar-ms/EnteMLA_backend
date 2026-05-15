@@ -8,10 +8,12 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 @Injectable()
 export class ComplaintsService {
 
+  
+
   constructor(
     @InjectModel(Complaint.name)
     private complaintModel: Model<Complaint>,
-  ) {}
+  ) { }
 
   async create(createComplaintDto: CreateComplaintDto): Promise<Complaint> {
     const newComplaint = new this.complaintModel({
@@ -151,16 +153,20 @@ async repostComplaint(id: string, userId: string) {
     fromRole: string,
     username: string,
   ) {
+
+    const normalizedRole =
+      (fromRole || 'citizen').toLowerCase();
+
     const fromLabel =
-      fromRole === 'employee' ? 'Employee' :
-      fromRole === 'mla' ? 'MLA' :
-      'Citizen';
+      normalizedRole === 'employee' ? 'Employee' :
+        normalizedRole === 'mla' ? 'MLA' :
+          'Citizen';
 
     const newReply = {
       text: replyText,
       username,
       from: fromLabel,
-      role: fromRole,       // ✅ saves "employee" / "mla" / "citizen"
+      role: normalizedRole,
       createdAt: new Date(),
     };
 
@@ -208,8 +214,8 @@ async repostComplaint(id: string, userId: string) {
   async sendMessage(id: string, comment: string, username: string, role: string) {
     const fromLabel =
       role === 'employee' ? 'Employee' :
-      role === 'mla' ? 'MLA' :
-      'Citizen';
+        role === 'mla' ? 'MLA' :
+          'Citizen';
 
     return this.complaintModel.findByIdAndUpdate(
       id,

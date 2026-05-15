@@ -14,7 +14,7 @@ import { Complaint } from './schemas/complaint.schema';
 
 @Controller('complaints')
 export class ComplaintsController {
-  constructor(private readonly complaintsService: ComplaintsService) {}
+  constructor(private readonly complaintsService: ComplaintsService) { }
 
   @Post()
   async create(@Body() dto: CreateComplaintDto): Promise<Complaint> {
@@ -59,7 +59,7 @@ async repostComplaint(
     return await this.complaintsService.getComplaintStats();
   }
 
- @Patch(':id/status')
+  @Patch(':id/status')
   updateStatus(
     @Param('id') id: string,
     @Body() body: any,
@@ -75,16 +75,16 @@ async repostComplaint(
   async addComment(@Param('id') id: string, @Body() body: CreateCommentDto) {
     return this.complaintsService.addComment(id, body);
   }
-  
- @Patch(':id/reply')
-async addReply(
-  @Param('id') id: string,
-  @Body('text') text: string,
-  @Body('role') role: string,
-  @Body('username') username: string,
-) {
-  return this.complaintsService.addReply(id, text, role, username);
-}
+
+  @Patch(':id/reply')
+  async addReply(
+    @Param('id') id: string,
+    @Body('text') text: string,
+    @Body('role') role: string,
+    @Body('username') username: string,
+  ) {
+    return this.complaintsService.addReply(id, text, role, username);
+  }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
