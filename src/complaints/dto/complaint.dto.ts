@@ -21,21 +21,21 @@ export class CreateComplaintDto {
 
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!:string;
 
   @IsString()
   @IsNotEmpty()
-  category: string;
+  category!:string;
 
   @IsEnum(UrgencyLevel, {
     message:
       'Urgency must be Normal, Medium, or Urgent',
   })
-  urgency: UrgencyLevel;
+  urgency!:UrgencyLevel;
 
   @IsString()
   @IsNotEmpty()
-  details: string;
+  details!:string;
 
   @IsEnum(VisibilityType, {
     message:
@@ -57,5 +57,5 @@ export class CreateComplaintDto {
     message: 'Invalid citizen ID',
   })
   @IsNotEmpty()
-  citizenId: string;
+  citizenId! : String;
 }
