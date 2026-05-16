@@ -17,6 +17,9 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": false,
-    "types": ["node", "jest", "multer"]
+    "types": ["node", "jest", "multer"],
+
+    "resolveJsonModule": true,    
+    "esModuleInterop": true
   }
 }
