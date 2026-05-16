@@ -1,31 +1,29 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ComplaintsModule } from './complaints/complaint.module';
 import { UsersModule } from './users/users.module';
-// import { RagModule } from './rag/rag.module'; // 1. Added RagModule import
-
+import { RagModule } from './rag/rag.module';
 
 @Module({
   imports: [
-    // Load the .env file
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
-      isGlobal: true, 
+      isGlobal: true,
     }),
-
-    // Connect to MongoDB
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('MONGODB_URI'),
       }),
     }),
-
     AuthModule,
     ComplaintsModule,
+    RagModule,
     UsersModule,
   ],
   controllers: [AppController],
